@@ -4,91 +4,108 @@ public class Lager {
 	
 	private int spalte;
 	private int zeile;
-	Artikel[][] lager;
+	private Artikel[][] lager;
 	
 		
 	public Lager() {
 		super();
 	}
 	
-	public void einlagern(Artikel artikel, int spalte, int zeile)
+	public void einlagern(Artikel artikel, Position position) throws LagerOutOfBounceException, LagerPositionBesetztException
 	{
-		if(lager[spalte][zeile] != null){
-			System.out.print("Dieser Platz ist bereits belegt!");
+		positionPrüfen(position);
+		Artikel temp = lagerInhalt(position);
+		if(temp != null){
+			throw new LagerPositionBesetztException(position, temp);
 		}
 		else{
-			
-		lager[spalte][zeile] = artikel;
-		System.out.println("Der Artikel ist nun an Platz "+spalte+"|"+zeile+" !");
+		artikelEinlagern(position, artikel);
+		System.out.println("Der Artikel ist nun an Platz "+position.spalte+"|"+position.zeile+" !");
 		}
 	}
 	
-	public void ausliefern(String artikelBezeichnung){
-		boolean correct = false;
-		for(int s = 0; s < lager.length; s++){
-			for(int z = 0; z <lager[s].length; z++){
-				Artikel artikel = lager[s][z];
-				if(artikel != null && artikel.getArtikelBezeichnung().equals(artikelBezeichnung)){
-					lager[s][z] = null;
-					correct = true;
+	public void artikelEinlagern(Position position, Artikel artikel) throws  LagerOutOfBounceException{
+		positionPrüfen(position);
+		lager[position.spalte][position.zeile] = artikel;
+	}
+		
+	
+	public Artikel ausliefern(Position position) throws LagerOutOfBounceException, LagerPositionLeerException{
+		positionPrüfen(position);
+		Artikel artikel = lagerInhalt(position);
+		if(artikel == null)
+		{
+			throw new LagerPositionLeerException(position);
+		}
+		else
+		{
+			artikelEinlagern(position, null);
+			return artikel;
+		}
+	}
+	
+	public Artikel inhalt(Position position)throws LagerOutOfBounceException, LagerPositionLeerException{
+		positionPrüfen(position);
+		Artikel artikel = lagerInhalt(position);
+		if(artikel == null)
+		{
+			throw new LagerPositionLeerException(position);
+		}
+		else
+		{
+			System.out.println("An der Position "+position.spalte+"|"+position.zeile + " befindet sich der Artikel "+artikel);
+			return artikel;
+		}
+		
+	}
+	
+	public Position position(String name) throws ArtikelNichtGefundenException{
+		for(int s = 0; s < spalte; s++){
+			for(int z = 0; z < zeile; z++){
+				Position position = new Position(s,z);
+				Artikel tempArtikel = lagerInhalt(position);
+				if(tempArtikel != null && tempArtikel.getArtikelBezeichnung().equals(name)){
+					return position;
+					
 				}
-				
 			}
-			
 		}
-		if(!correct){
-			System.out.println("Der eingegebene Artikel existiert nicht!");
+		throw new ArtikelNichtGefundenException(name);
+		}
+
+	public Artikel lagerInhalt(Position position)
+	{
+		return lager[position.spalte][position.zeile];
+	}
+	
+	private void positionPrüfen(Position position) throws LagerOutOfBounceException {
+		if (position.spalte >= spalte || position.zeile >= zeile || position.spalte < 0 || position.zeile < 0) {
+			throw new LagerOutOfBounceException();
 		}
 	}
 	
-	public void position(String artikelBezeichnung){
-		boolean correct = false;
-		for(int s = 0; s < lager.length; s++){
-			for(int z = 0; z < lager[s].length; z++){
-				Artikel artikel = lager[s][z];
-				if(artikel != null && artikel.getArtikelBezeichnung().equals(artikelBezeichnung)){
-					System.out.println("Der Artikel " + artikelBezeichnung + " hat folgende Position: " + s + "|"+ z);
-					correct = true;
-				}
-			}
-		}
-		if(!correct){
-			System.out.println("Es gibt keinen Artikel mit diesem Namen!");
-		}
-	}
-	
-	public Artikel suchen(int spalte, int zeile){
-		if(lager[spalte][zeile] == null){
-			System.out.println("Dieser Platz ist leer!");
-			return null;
-		}
-		else{
-			System.out.println(lager[spalte][zeile].getArtikelBezeichnung()+" | "+lager[spalte][zeile].getLieferant()+" | "+lager[spalte][zeile].getArtikelNummer()+" | "+lager[spalte][zeile].getPreis()+" | "+lager[spalte][zeile].getVerpackungsEinheit());
-			return lager[spalte][zeile];
-			
-		}
-		
-		
-		
+	public Artikel suchen(Position position) throws LagerOutOfBounceException {
+		positionPrüfen(position);
+		return lagerInhalt(position);
 	}
 	
 	public void inventar(){
 		for(int s = 0; s < lager.length; s++){
 			for(int z = 0; z < lager[s].length; z++){
-				if(lager[s][z] != null){
-					Artikel artikel = lager[s][z];
-					
-					System.out.println("- "+artikel.toString()+ " --> Position: "+s+" | "+ z+ "\n");
-					
+				Position tempPosition = new Position(s,z);
+				Artikel tempArtikel = lagerInhalt(tempPosition);
+				if(tempArtikel != null){
+					System.out.println(tempArtikel);
 				}
 			}
 		}
+
 	}
 	
-	public void konfigurieren(int spalte, int zeile){
-		lager = new Artikel[spalte][zeile];
-		this.spalte = spalte;
-		this.zeile = zeile;
+	public void konfigurieren(Position position){
+		lager = new Artikel[position.spalte][position.zeile];
+		this.spalte = position.spalte;
+		this.zeile = position.zeile;
 		System.out.println("Neue Konfiguration: Spalte|Zeile: "+getSpalte()+"|"+getZeile());
 	}
 	

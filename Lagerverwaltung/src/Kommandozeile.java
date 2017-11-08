@@ -15,14 +15,13 @@ public class Kommandozeile {
 	
 	public void start(){
 		System.out.println("Wählen Sie bitte die größe Ihres Lagers.");
-		lager.konfigurieren(eingabeSpalte(), eingabeZeile());
+		lager.konfigurieren(createPosition());
 		hilfe();
 		eingabe();
 	}
 	
 	private  void eingabe(){
-		System.out.println("\nNeuer Befehl: ");
-		String eingabe = eingabeString();
+		String eingabe = aufEingabeWarten("\nNeuer Befehl: ");
 		boolean correct = false;
 		for(int i=0; i < optionen.length; i++){
 			if(optionen[i][0].equals(eingabe)){	
@@ -43,35 +42,20 @@ public class Kommandozeile {
 		
 				switch (eingabe) {
 				case "konfigurieren":
-						lager.konfigurieren(eingabeSpalte(), eingabeZeile());	
+						lager.konfigurieren(createPosition());	
 						eingabe();
 					break;
 				case "einlagern":
-					System.out.println("Artikelbezeichnung: ");
-					String artikelBezeichnung = eingabeString();
-					System.out.println("Artikelnummer: ");
-					int artikelNummer = eingabeInt();
-					System.out.println("Verpackungseinheit: ");
-					int verpackungsEinheit = eingabeInt();
-					System.out.println("Lieferant: ");
-					String lieferant = eingabeString();
-					System.out.println("Preis: ");
-					int preis = eingabeInt();			
-					Artikel artikel = new Artikel(artikelBezeichnung, artikelNummer, verpackungsEinheit, lieferant, preis);
-					lager.einlagern(artikel, eingabeSpalte(), eingabeZeile());					
+					einlagern(createArticle());				
 					eingabe();				
 					break;
 					
 				case "ausliefern":
-					System.out.println("Geben Sie den Namen des gesuchten Artikels ein!");
-					artikelBezeichnung = eingabeString();
-					lager.ausliefern(artikelBezeichnung);
+					ausliefern();
 					eingabe();
 					break;
 				case "position":
-					System.out.println("Geben Sie den Namen des gesuchten Artikels ein!");
-					artikelBezeichnung = eingabeString();
-					lager.position(artikelBezeichnung);
+					position();
 					eingabe();
 					break;
 				case "inventar":
@@ -79,7 +63,7 @@ public class Kommandozeile {
 					eingabe();
 					break;
 				case "inhalt":
-					lager.suchen(eingabeSpalte(), eingabeZeile());
+					inhalt(createPosition());
 					eingabe();
 					break;
 				case "hilfe":
@@ -91,22 +75,57 @@ public class Kommandozeile {
 					break;
 				}
 	}
+	
+	private void inhalt(Position position){
+		try{
+			lager.inhalt(position);
+		} catch (LagerOutOfBounceException e){
+			System.out.println("Position nicht im Lagerhaus!");
+			inhalt(position);
+		} catch (LagerPositionLeerException e){
+			System.out.println("An der gesuchten Position befindet sich kein Artikel!");
+			inhalt(position);
+		}
+	}
+	
+	
+	private void einlagern(Artikel artikel) {
+		Position position = createPosition();
+		try {
+			lager.einlagern(artikel, position);
+		} catch (LagerPositionBesetztException e) {
+			System.out.println("Position bereits belegt!");
+			einlagern(artikel);
+		} catch (LagerOutOfBounceException e) {
+			System.out.println("Position nicht im Lagerhaus!");
+			einlagern(artikel);
+		}
+	}
+	
+	private void ausliefern() {
+		Position position = createPosition();
+		try {
+			Artikel artikel = lager.ausliefern(position);
+			System.out.println("Artikel " + artikel + " wurde ausgeliefert.");
+		}
+		catch (LagerPositionLeerException e) {
+			System.out.println("Lagerplatz leer!");
+		} catch (LagerOutOfBounceException e) {
+			System.out.println("Position nicht im Lagerhaus!");
+			ausliefern();
+		}
+	}
+	
+	private void position() {
+		String eingabe = aufEingabeWarten("Geben Sie den Namen des gesuchten Artikels ein: ");
+		try {
+			Position position = lager.position(eingabe);
+			System.out.println("Der Artikel befindet sich am Platz " + position);
+		} catch (ArtikelNichtGefundenException e) {
+			System.out.println("Artikel nicht im Lagerhaus!");
+		}
+	}
 		
-	
-	public int eingabeSpalte(){
-		int spalte;
-		System.out.println("Geben sie die Spaltennummer ein!");
-		spalte = eingabeInt();
-		return spalte;
-				
-	}
-	
-	public int eingabeZeile(){
-		int zeile;
-		System.out.println("Geben Sie die Zeilennummer ein!");
-		zeile = eingabeInt();
-		return zeile;
-	}
 	
 	private void hilfe(){
 		System.out.println("----------Hilfe---------");
@@ -137,26 +156,46 @@ public class Kommandozeile {
 				
 	}
 	
-	private int eingabeInt(){
-		if(scanner.hasNextInt()){
-			int input = scanner.nextInt();
-			return input;
-			
-		}	
-		else{
-			System.out.println("Geben Sie bitte einen Integer ein!");
-			return 0; 
-		}
-			
+	
+	
+	private String aufEingabeWarten(String text) {
+		System.out.print(text);
+		return scanner.next();
 	}
 	
-	private String eingabeString(){
-		String input = scanner.next();
-		return input;		
+	private Position createPosition() {
+		String spalteEingabe= aufEingabeWarten("Spalte:");
+		String zeileEingabe = aufEingabeWarten("Zeile:");
+		try {
+			int spalte = Integer.parseInt(spalteEingabe);
+			int zeile = Integer.parseInt(zeileEingabe);
+			return new Position(spalte, zeile);
+		} catch (Exception e) {
+			System.out.println("Fehler in der Eingabe!");
+			return createPosition();
+		}
+	}
+	
+	private Artikel createArticle() {
+		String name = aufEingabeWarten("Name:");
+		String packungEingabe = aufEingabeWarten("Verpackungseinheit:");
+		String preisEingabe = aufEingabeWarten("Preis:");
+		String lieferant = aufEingabeWarten("Lieferant:");
+		try {
+			Double preis = Double.parseDouble(preisEingabe);
+			int verpackungsEinheit = Integer.parseInt(packungEingabe);
+			Artikel artikel = new Artikel(name, verpackungsEinheit, lieferant, preis);
+			System.out.println("Article ID: " + artikel.getNumber());
+			return artikel;
+		} catch (Exception e) {
+			System.out.println("Fehler in der Eingabe!");
+			return createArticle();
+		}
 	}
 	
 	private void fehler(){
 		System.out.println("Bitte geben Sie ein gültiges Zeichen ein!");
+		eingabe();
 	}
 			
 }

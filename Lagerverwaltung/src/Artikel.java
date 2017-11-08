@@ -1,21 +1,19 @@
 
-public class Artikel {
+public class Artikel extends Seriennummer{
 	private String artikelBezeichnung;
-	private int artikelNummer;
 	private int verpackungsEinheit;
 	private String lieferant;
-	private int preis;
+	private double preis;
 	
 	
 	
 	
 	
 	
-	public Artikel(String artikelBezeichnung, int artikelNummer, int verpackungsEinheit, String lieferant,
-			int preis) {
+	public Artikel(String artikelBezeichnung, int verpackungsEinheit, String lieferant,
+			double preis) {
 		super();
 		this.artikelBezeichnung = artikelBezeichnung;
-		this.artikelNummer = artikelNummer;
 		this.verpackungsEinheit = verpackungsEinheit;
 		this.lieferant = lieferant;
 		this.preis = preis;
@@ -27,12 +25,7 @@ public class Artikel {
 	public void setArtikelBezeichnung(String artikelBezeichnung) {
 		this.artikelBezeichnung = artikelBezeichnung;
 	}
-	public int getArtikelNummer() {
-		return artikelNummer;
-	}
-	public void setArtikelNummer(int artikelNummer) {
-		this.artikelNummer = artikelNummer;
-	}
+	
 	public int getVerpackungsEinheit() {
 		return verpackungsEinheit;
 	}
@@ -45,17 +38,17 @@ public class Artikel {
 	public void setLieferant(String lieferant) {
 		this.lieferant = lieferant;
 	}
-	public int getPreis() {
+	public double getPreis() {
 		return preis;
 	}
-	public void setPreis(int preis) {
+	public void setPreis(double preis) {
 		this.preis = preis;
 	}
 
 	@Override
 	public String toString() {
-		return "- " + artikelBezeichnung + ": Nummer=" + artikelNummer
-				+ "| Verpackungseinheit=" + verpackungsEinheit + "| Lieferant=" + lieferant + "| Preis=" + preis;
+		return "\n-" + artikelBezeichnung + ": Verpackungseinheit=" + verpackungsEinheit + " Lieferant=" + lieferant + " Preis=" + preis
+				+"\n"+ "Seriennummer: " +super.nummer;
 	}
 	
 	
